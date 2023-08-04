@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulnerability Cancer Map</title>
+    <!-- Include Leaflet CSS and JavaScript -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Add your custom CSS styling here */
+        #map {
+            height: 500px;
+        }
+
+        /* New style for the chart icons */
+        .chart-icon {
+            width: 50px; /* Adjust as needed */
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* New style for the legend */
+        #legend {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .male-legend {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-color: blue; /* Male color */
+            margin-right: 5px;
+        }
+
+        .female-legend {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-color: pink; /* Female color */
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; font-weight: bold;">Vulnerability Cancer Map</h1>
+    <div id="map"></div>
+    <div id="legend">
+        <div><span class="male-legend"></span> Male</div>
+        <div><span class="female-legend"></span> Female</div>
+    </div>
+    <script>
+        // Sample data for 10 British cities
+        var data = [
+            { city: "London", latitude: 51.5074, longitude: -0.1278, cancerData: { male: 10, female: 10 } },
+            { city: "Manchester", latitude: 53.4830, longitude: -2.2441, cancerData: { male: 50, female: 40 } },
+            { city: "Birmingham", latitude: 52.4862, longitude: -1.8904, cancerData: { male: 100, female: 90 } },
+            { city: "Liverpool", latitude: 53.4084, longitude: -2.9916, cancerData: { male: 150, female: 100 } },
+            { city: "Glasgow", latitude: 55.8642, longitude: -4.2518, cancerData: { male: 160, female: 110 } },
+            { city: "Edinburgh", latitude: 55.9533, longitude: -3.1883, cancerData: { male: 370, female: 300 } },
+            { city: "Bristol", latitude: 51.4545, longitude: -2.5879, cancerData: { male: 500, female: 400 } },
+            { city: "Leeds", latitude: 53.7997, longitude: -1.5491, cancerData: { male: 600, female: 500 } },
+            { city: "Sheffield", latitude: 53.3811, longitude: -1.4701, cancerData: { male: 800, female: 700 } },
+            { city: "Newcastle", latitude: 54.9785, longitude: -1.6174, cancerData: { male: 500, female: 400 } }
+        ];
+
+        // Initialize the map
+        var map = L.map('map').setView([53.4, -2.98], 6);
+
+        // Add a tile layer to the map (you can choose different map styles)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Loop through data and create markers with popups and pie charts
+        data.forEach(function(item) {
+            var marker = L.marker([item.latitude, item.longitude]).addTo(map);
+
+            var totalCases = item.cancerData.male + item.cancerData.female;
+            var malePercentage = (item.cancerData.male / totalCases) * 100;
+            var femalePercentage = (item.cancerData.female / totalCases) * 100;
+
+            var popupContent = `
+                <b>City:</b> ${item.city}<br>
+                <b>Total Cancer Cases:</b> ${totalCases}<br>
+                <b>Male Cancer Cases:</b> ${item.cancerData.male} (${malePercentage.toFixed(2)}%)<br>
+                <b>Female Cancer Cases:</b> ${item.cancerData.female} (${femalePercentage.toFixed(2)}%)
+            `;
+
+            marker.bindPopup(popupContent);
+
+            // Create a pie chart canvas element
+            var canvas = document.createElement('canvas');
+            canvas.width = 50; // Adjust the size as needed
+            canvas.height = 50;
+
+            // Create the pie chart using Chart.js
+            new Chart(canvas.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Male', 'Female'],
+                    datasets: [{
+                        data: [malePercentage, femalePercentage],
+                        backgroundColor: ['blue', 'pink']
+                    }]
+                },
+                options: {
+                    cutoutPercentage: 70, // Adjust the cutout to create a 'donut' shape
+                    responsive: false, // Disable responsiveness for precise positioning
+                    legend: {
+                        display: false // Hide the default legend
+                    }
+                }
+            });
+
+            // Add the canvas as a marker icon
+            marker.setIcon(L.divIcon({
+                className: 'chart-icon',
+                html: canvas
+            }));
+        });
+
+        // Update legend colors based on percentages
+        document.querySelector('.male-legend').style.backgroundColor = 'blue';
+        document.querySelector('.female-legend').style.backgroundColor = 'pink';
+    </script>
+</body>
+</html>
